@@ -46,11 +46,18 @@ pub(crate) async fn get_token_accounts_for_owner(
     let mut token_accounts: Vec<ParsedTokenAccount> = Vec::new();
     for account in accounts {
         if let UiAccountData::Json(data) = account.account.data {
+            let spl_token_program_id;
             let token_program = match data.program.as_str() {
                 // "spl-token" => &spl_token::ID.to_string(),
                 // "spl-token-2022" => &spl_token_2022::ID.to_string(),
-                "spl-token" => { let spl_token_id = spl_token::ID.to_string(); &spl_token_id },
-                "spl-token-2022" => { let spl_token_2022_id = spl_token_2022::ID.to_string(); &spl_token_2022_id },
+                "spl-token" => {
+                    spl_token_program_id = spl_token::ID.to_string();
+                    &spl_token_program_id
+                }
+                "spl-token-2022" => {
+                    spl_token_program_id = spl_token_2022::ID.to_string();
+                    &spl_token_program_id
+                }
                 pubkey => pubkey,
             };
             let token: Parsed = from_value(data.parsed)?;

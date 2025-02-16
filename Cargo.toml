@@ -1,4 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["programs/*"]
-exclude = ["rust-sdk", "ts-sdk", "docs", "examples"]
+# members = ["programs/*"]
+# exclude = ["rust-sdk", "ts-sdk", "docs", "examples"]
+members = ["rust-sdk/*"]
+exclude = ["rust-sdk/integration", "programs", "ts-sdk", "docs", "examples"]
