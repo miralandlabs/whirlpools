@@ -15,6 +15,7 @@ edition = "2021"
 default = []
 
 [dependencies]
+# anyhow = "1.0.95"
 solana-program = { version = "1.18.26" }
 solana-client = { version = "1.18.26" }
 solana-sdk = { version = "1.18.26" }

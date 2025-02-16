@@ -1,5 +1,7 @@
 use std::{error::Error, iter::zip};
 
+// use anyhow::Result;
+
 use orca_whirlpools_client::{
     get_oracle_address, get_tick_array_address, AccountsType, RemainingAccountsInfo,
     RemainingAccountsSlice, SwapV2, SwapV2InstructionArgs, TickArray, Whirlpool,
@@ -14,6 +16,7 @@ use solana_sdk::{
 };
 
 use crate::{
+    error,
     token::{get_current_transfer_fee, prepare_token_accounts_instructions, TokenAccountStrategy},
     FUNDER, SLIPPAGE_TOLERANCE_BPS,
 };
@@ -186,12 +189,14 @@ pub async fn swap_instructions(
     swap_type: SwapType,
     slippage_tolerance_bps: Option<u16>,
     signer: Option<Pubkey>,
-) -> Result<SwapInstructions, Box<dyn Error>> {
+    // ) -> Result<SwapInstructions, Box<dyn Error>> {
+) -> Result<SwapInstructions, error::ClientError> {
     let slippage_tolerance_bps =
-        slippage_tolerance_bps.unwrap_or(*SLIPPAGE_TOLERANCE_BPS.try_lock()?);
-    let signer = signer.unwrap_or(*FUNDER.try_lock()?);
+        slippage_tolerance_bps.unwrap_or(*SLIPPAGE_TOLERANCE_BPS.try_lock().unwrap());
+    let signer = signer.unwrap_or(*FUNDER.try_lock().unwrap());
     if signer == Pubkey::default() {
-        return Err("Signer must be provided".into());
+        // return Err("Signer must be provided".into());
+        return Err(error::ClientError::InvalidSigner);
     }
 
     let whirlpool_info = rpc.get_account(&whirlpool_address).await?;
@@ -200,7 +205,9 @@ pub async fn swap_instructions(
     let specified_token_a = specified_mint == whirlpool.token_mint_a;
     let a_to_b = specified_token_a == specified_input;
 
-    let tick_arrays = fetch_tick_arrays_or_default(rpc, whirlpool_address, &whirlpool).await?;
+    let tick_arrays = fetch_tick_arrays_or_default(rpc, whirlpool_address, &whirlpool)
+        .await
+        .unwrap();
 
     let mint_infos = rpc
         .get_multiple_accounts(&[whirlpool.token_mint_a, whirlpool.token_mint_b])
@@ -208,11 +215,13 @@ pub async fn swap_instructions(
 
     let mint_a_info = mint_infos[0]
         .as_ref()
-        .ok_or(format!("Mint a not found: {}", whirlpool.token_mint_a))?;
+        .ok_or(format!("Mint a not found: {}", whirlpool.token_mint_a))
+        .unwrap();
 
     let mint_b_info = mint_infos[1]
         .as_ref()
-        .ok_or(format!("Mint b not found: {}", whirlpool.token_mint_b))?;
+        .ok_or(format!("Mint b not found: {}", whirlpool.token_mint_b))
+        .unwrap();
 
     let oracle_address = get_oracle_address(&whirlpool_address)?.0;
 
@@ -259,7 +268,9 @@ pub async fn swap_instructions(
     let mut instructions: Vec<Instruction> = Vec::new();
 
     let token_accounts =
-        prepare_token_accounts_instructions(rpc, signer, vec![token_a_spec, token_b_spec]).await?;
+        prepare_token_accounts_instructions(rpc, signer, vec![token_a_spec, token_b_spec])
+            .await
+            .unwrap();
 
     instructions.extend(token_accounts.create_instructions);
 
