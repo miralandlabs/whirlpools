@@ -12,7 +12,7 @@ sdk/node_modules
 **/yalc.lock
 dist
 artifacts
-generated
+# generated
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -20,7 +20,7 @@ generated
 !.yarn/sdks
 !.yarn/versions
 .nx
-generated
+# generated
 .docusaurus
 .cache-loader
 .devcontainer
